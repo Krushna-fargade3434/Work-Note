@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, isToday, isTomorrow, isPast } from 'date-fns';
-import { Check, Calendar, Trash2, Edit3, MoreVertical, Flag } from 'lucide-react';
-import { Task, TaskPriority, UpdateTaskInput } from '@/hooks/useTasks';
+import { Check, Calendar, Trash2, Edit3, MoreVertical } from 'lucide-react';
+import { Task, UpdateTaskInput } from '@/hooks/useTasks';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,16 +19,9 @@ interface TaskItemProps {
   onUpdate: (id: string, input: UpdateTaskInput) => void;
 }
 
-const priorityConfig: Record<TaskPriority, { label: string; className: string }> = {
-  high: { label: 'High', className: 'priority-high' },
-  medium: { label: 'Medium', className: 'priority-medium' },
-  low: { label: 'Low', className: 'priority-low' },
-};
-
 export const TaskItem = ({ task, onToggle, onDelete, onUpdate }: TaskItemProps) => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const isCompleted = task.status === 'completed';
-  const priority = priorityConfig[task.priority];
 
   const formatDueDate = (dateStr: string | null) => {
     if (!dateStr) return null;
@@ -47,7 +40,7 @@ export const TaskItem = ({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, x: -100 }}
-        className={`task-item group ${isCompleted ? 'opacity-60' : ''}`}
+        className={`task-item group relative ${isCompleted ? 'opacity-60' : ''}`}
       >
         <div className="flex items-start gap-4">
           {/* Checkbox */}
@@ -72,15 +65,22 @@ export const TaskItem = ({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
             </AnimatePresence>
           </button>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <p
-              className={`font-medium transition-all duration-300 ${
-                isCompleted ? 'line-through text-muted-foreground' : ''
-              }`}
+            <div className="flex-1 min-w-0">
+            <motion.p
+              className={`font-medium transition-colors duration-300 ${isCompleted ? 'text-muted-foreground' : ''}`}
+              animate={isCompleted ? { opacity: 0.7 } : { opacity: 1 }}
             >
-              {task.title}
-            </p>
+              <motion.span
+                animate={isCompleted
+                  ? { textDecorationLine: 'line-through' }
+                  : { textDecorationLine: 'none' }
+                }
+                transition={{ duration: 0.3 }}
+                style={{ textDecoration: isCompleted ? 'line-through' : 'none' }}
+              >
+                {task.title}
+              </motion.span>
+            </motion.p>
             {task.description && (
               <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                 {task.description}
@@ -97,15 +97,11 @@ export const TaskItem = ({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
                   {formatDueDate(task.due_date)}
                 </div>
               )}
-              <div className={`flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border ${priority.className}`}>
-                <Flag className="w-3 h-3" />
-                {priority.label}
-              </div>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Actions - always visible on mobile, hover on desktop */}
+          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="p-2 rounded-lg hover:bg-secondary transition-colors">

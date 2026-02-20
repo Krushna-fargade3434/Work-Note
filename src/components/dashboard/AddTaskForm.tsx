@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import { Plus, Calendar as CalendarIcon, Flag, X } from 'lucide-react';
-import { CreateTaskInput, TaskPriority } from '@/hooks/useTasks';
+import { Plus, Calendar as CalendarIcon, X } from 'lucide-react';
+import { CreateTaskInput } from '@/hooks/useTasks';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -10,13 +10,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 interface AddTaskFormProps {
   onAdd: (input: CreateTaskInput) => Promise<unknown>;
@@ -27,7 +20,6 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState<Date | undefined>();
-  const [priority, setPriority] = useState<TaskPriority>('medium');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,13 +31,11 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
       title: title.trim(),
       description: description.trim() || undefined,
       due_date: dueDate ? format(dueDate, 'yyyy-MM-dd') : undefined,
-      priority,
     });
 
     setTitle('');
     setDescription('');
     setDueDate(undefined);
-    setPriority('medium');
     setIsExpanded(false);
     setLoading(false);
   };
@@ -54,7 +44,6 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
     setTitle('');
     setDescription('');
     setDueDate(undefined);
-    setPriority('medium');
     setIsExpanded(false);
   };
 
@@ -70,10 +59,10 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
             onClick={() => setIsExpanded(true)}
             className="w-full p-4 flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <div className="w-8 h-8 rounded-lg hero-gradient flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg hero-gradient flex items-center justify-center" title="Add task">
               <Plus className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-medium">Add a new task...</span>
+            <span className="font-medium text-muted-foreground/60">Create a new note...</span>
           </motion.button>
         ) : (
           <motion.form
@@ -92,7 +81,7 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="What needs to be done?"
+                placeholder="e.g., Submit report by 6 PM"
                 className="flex-1 bg-transparent border-none outline-none text-lg font-medium placeholder:text-muted-foreground"
                 autoFocus
               />
@@ -132,18 +121,6 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
                   />
                 </PopoverContent>
               </Popover>
-
-              <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
-                <SelectTrigger className="w-auto inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary text-secondary-foreground text-sm border-none">
-                  <Flag className="w-4 h-4" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
@@ -160,7 +137,7 @@ export const AddTaskForm = ({ onAdd }: AddTaskFormProps) => {
                 disabled={!title.trim() || loading}
                 className="btn-primary"
               >
-                {loading ? 'Adding...' : 'Add Task'}
+                {loading ? 'Creating...' : 'Create Note'}
               </Button>
             </div>
           </motion.form>

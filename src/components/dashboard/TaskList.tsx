@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, isToday, parseISO } from 'date-fns';
-import { Inbox } from 'lucide-react';
+import { Inbox, Sparkles } from 'lucide-react';
 import { Task, UpdateTaskInput } from '@/hooks/useTasks';
 import { TaskItem } from './TaskItem';
 import { TaskFilters, FilterType } from './TaskFilters';
@@ -17,6 +17,13 @@ interface TaskListProps {
 export const TaskList = ({ tasks, loading, onToggle, onDelete, onUpdate }: TaskListProps) => {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
   const [customDate, setCustomDate] = useState<Date | undefined>();
+
+  const taskCounts = useMemo(() => ({
+    all: tasks.length,
+    today: tasks.filter(t => t.due_date && isToday(parseISO(t.due_date))).length,
+    pending: tasks.filter(t => t.status === 'pending').length,
+    completed: tasks.filter(t => t.status === 'completed').length,
+  }), [tasks]);
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -54,10 +61,22 @@ export const TaskList = ({ tasks, loading, onToggle, onDelete, onUpdate }: TaskL
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-12 bg-secondary rounded-xl animate-pulse" />
+        <div className="flex gap-2">
+          {[80, 72, 96, 56].map((w, i) => (
+            <div key={i} className={`h-9 rounded-xl bg-secondary skeleton`} style={{ width: w }} />
+          ))}
+        </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-secondary rounded-xl animate-pulse" />
+            <div key={i} className="card-elevated p-4">
+              <div className="flex items-start gap-4">
+                <div className="w-5 h-5 mt-0.5 rounded-full bg-secondary skeleton flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-secondary skeleton rounded-lg" style={{ width: `${60 + i * 15}%` }} />
+                  <div className="h-3 bg-secondary skeleton rounded-lg w-1/3" />
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -71,6 +90,7 @@ export const TaskList = ({ tasks, loading, onToggle, onDelete, onUpdate }: TaskL
         customDate={customDate}
         onFilterChange={setActiveFilter}
         onCustomDateChange={setCustomDate}
+        taskCounts={taskCounts}
       />
 
       <div>
@@ -83,14 +103,20 @@ export const TaskList = ({ tasks, loading, onToggle, onDelete, onUpdate }: TaskL
               animate={{ opacity: 1, scale: 1 }}
               className="card-elevated p-12 text-center"
             >
-              <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-4">
-                <Inbox className="w-8 h-8 text-muted-foreground" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-4">
+                {activeFilter === 'all' && tasks.length === 0
+                  ? <Sparkles className="w-8 h-8 text-primary/60" />
+                  : <Inbox className="w-8 h-8 text-muted-foreground" />}
               </div>
-              <h3 className="font-display font-semibold text-lg mb-2">No tasks found</h3>
-              <p className="text-muted-foreground">
-                {activeFilter === 'all'
-                  ? 'Add your first task to get started'
-                  : 'No tasks match your current filter'}
+              <h3 className="font-display font-semibold text-lg mb-2">
+                {activeFilter === 'all' && tasks.length === 0
+                  ? "You're all clear!"
+                  : 'Nothing here'}
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                {activeFilter === 'all' && tasks.length === 0
+                  ? 'Add your first task above to get started.'
+                  : 'No tasks match this filter — try a different one.'}
               </p>
             </motion.div>
           ) : (

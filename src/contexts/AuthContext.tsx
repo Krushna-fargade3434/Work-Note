@@ -13,6 +13,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Auto-confirm user email using admin API (dev only)
+const autoConfirmUser = async (userId: string) => {
+  const serviceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+  
+  if (!serviceRoleKey || !supabaseUrl) return;
+  
+  try {
+    await fetch(`${supabaseUrl}/auth/v1/admin/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'apikey': serviceRoleKey,
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email_confirm: true }),
+    });
+  } catch (error) {
+    console.error('Auto-confirm failed:', error);
+  }
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -30,6 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state changed:', event);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -37,11 +60,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (error) {
+          console.error('Error getting session:', error);
+        }
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Failed to get session:', error);
+        setLoading(false);
+      });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -49,7 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signUp = async (email: string, password: string, fullName?: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -59,6 +90,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       },
     });
+    
+    // Auto-confirm the user's email (dev mode)
+    if (!error && data.user) {
+      await autoConfirmUser(data.user.id);
+      // Re-sign in after confirmation
+      await supabase.auth.signInWithPassword({ email, password });
+    }
     
     return { error: error as Error | null };
   };

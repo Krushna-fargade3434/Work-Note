@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Flag } from 'lucide-react';
-import { Task, TaskPriority, UpdateTaskInput } from '@/hooks/useTasks';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Task, UpdateTaskInput } from '@/hooks/useTasks';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -15,13 +15,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 interface TaskEditDialogProps {
   task: Task;
@@ -36,13 +29,11 @@ export const TaskEditDialog = ({ task, open, onOpenChange, onUpdate }: TaskEditD
   const [dueDate, setDueDate] = useState<Date | undefined>(
     task.due_date ? new Date(task.due_date) : undefined
   );
-  const [priority, setPriority] = useState<TaskPriority>(task.priority);
 
   useEffect(() => {
     setTitle(task.title);
     setDescription(task.description || '');
     setDueDate(task.due_date ? new Date(task.due_date) : undefined);
-    setPriority(task.priority);
   }, [task]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -53,7 +44,6 @@ export const TaskEditDialog = ({ task, open, onOpenChange, onUpdate }: TaskEditD
       title: title.trim(),
       description: description.trim() || undefined,
       due_date: dueDate ? format(dueDate, 'yyyy-MM-dd') : null,
-      priority,
     });
     onOpenChange(false);
   };
@@ -87,58 +77,27 @@ export const TaskEditDialog = ({ task, open, onOpenChange, onUpdate }: TaskEditD
             />
           </div>
 
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium mb-2">Due Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <button
-                    type="button"
-                    className="input-modern flex items-center gap-2 text-left"
-                  >
-                    <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                    {dueDate ? format(dueDate, 'MMM d, yyyy') : 'Pick a date'}
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={dueDate}
-                    onSelect={setDueDate}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="flex-1">
-              <label className="block text-sm font-medium mb-2">Priority</label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
-                <SelectTrigger className="input-modern">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">
-                    <div className="flex items-center gap-2">
-                      <Flag className="w-4 h-4 text-primary" />
-                      Low
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="medium">
-                    <div className="flex items-center gap-2">
-                      <Flag className="w-4 h-4 text-warning" />
-                      Medium
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="high">
-                    <div className="flex items-center gap-2">
-                      <Flag className="w-4 h-4 text-destructive" />
-                      High
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Due Date</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="input-modern flex items-center gap-2 text-left"
+                >
+                  <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                  {dueDate ? format(dueDate, 'MMM d, yyyy') : 'Pick a date'}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dueDate}
+                  onSelect={setDueDate}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
