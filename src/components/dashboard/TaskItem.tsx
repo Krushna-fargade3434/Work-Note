@@ -40,9 +40,17 @@ export const TaskItem = ({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, x: -100 }}
-        className={`task-item group relative ${isCompleted ? 'opacity-60' : ''}`}
+        className={`task-item group relative overflow-hidden ${isCompleted ? 'opacity-60' : ''} ${isOverdue ? 'border-destructive/30' : ''}`}
       >
-        <div className="flex items-start gap-4">
+        {/* Overdue accent stripe */}
+        {isOverdue && (
+          <div className="absolute left-0 inset-y-0 w-0.5 rounded-full bg-destructive" />
+        )}
+        {/* Completed accent stripe */}
+        {isCompleted && (
+          <div className="absolute left-0 inset-y-0 w-0.5 rounded-full bg-[hsl(var(--success))]" />
+        )}
+        <div className={`flex items-start gap-4 ${isOverdue || isCompleted ? 'pl-3' : ''}`}>
           {/* Checkbox */}
           <button
             onClick={() => onToggle(task.id)}
@@ -89,12 +97,17 @@ export const TaskItem = ({ task, onToggle, onDelete, onUpdate }: TaskItemProps) 
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               {task.due_date && (
                 <div
-                  className={`flex items-center gap-1.5 text-xs ${
+                  className={`flex items-center gap-1.5 text-xs font-medium ${
                     isOverdue ? 'text-destructive' : 'text-muted-foreground'
                   }`}
                 >
                   <Calendar className="w-3.5 h-3.5" />
                   {formatDueDate(task.due_date)}
+                  {isOverdue && (
+                    <span className="text-[10px] font-bold bg-destructive/10 text-destructive px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+                      overdue
+                    </span>
+                  )}
                 </div>
               )}
             </div>
